@@ -1,16 +1,13 @@
-const API_BASE =
-  (
-    process.env.NEXT_PUBLIC_API_URL ||
-    'http://127.0.0.1:8000'
-  ).replace(/\/$/, '')
+const API_BASE = (
+  process.env.NEXT_PUBLIC_API_URL || ''
+).replace(/\/$/, '')
 
 
 async function request<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const url =
-    `${API_BASE}${path}`
+  const url = `${API_BASE}${path}`
 
   console.log(
     `[PanelAI API] ${options.method || 'GET'} ${url}`,
@@ -19,17 +16,13 @@ async function request<T>(
   let response: Response
 
   try {
-    response = await fetch(
-      url,
-      {
-        ...options,
-        headers: {
-          'Content-Type':
-            'application/json',
-          ...(options.headers || {}),
-        },
+    response = await fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.headers || {}),
       },
-    )
+    })
   } catch (error) {
     console.error(
       `[PanelAI API] Network error: ${url}`,
@@ -37,35 +30,29 @@ async function request<T>(
     )
 
     throw new Error(
-      `Unable to connect to PanelAI backend at ${API_BASE}`,
+      `Unable to connect to PanelAI backend at ${
+        API_BASE || 'the current host'
+      }`,
     )
   }
 
-
-  const text =
-    await response.text()
-
+  const text = await response.text()
 
   let data: any = null
 
-
   if (text) {
     try {
-      data =
-        JSON.parse(text)
+      data = JSON.parse(text)
     } catch {
       data = text
     }
   }
 
-
   if (!response.ok) {
     const message =
-      typeof data === 'object' &&
-      data?.detail
+      typeof data === 'object' && data?.detail
         ? data.detail
-        : typeof data === 'string' &&
-          data.trim()
+        : typeof data === 'string' && data.trim()
           ? data
           : `Request failed with status ${response.status}`
 
@@ -73,11 +60,8 @@ async function request<T>(
       `[PanelAI API] ${response.status}: ${message}`,
     )
 
-    throw new Error(
-      message,
-    )
+    throw new Error(message)
   }
-
 
   return data as T
 }
@@ -128,7 +112,6 @@ export type StartInterviewResponse = {
 export async function startInterview(
   config: StartInterviewConfig,
 ): Promise<StartInterviewResponse> {
-
   const response =
     await request<StartInterviewResponse>(
       '/api/interview/start',
@@ -166,7 +149,6 @@ export async function startInterview(
       },
     )
 
-
   /*
    * Backend returns:
    *
@@ -196,7 +178,6 @@ export async function startInterview(
     response.session.channel_name =
       response.agora.channel_name
   }
-
 
   /*
    * Also support Agora information returned
@@ -240,7 +221,6 @@ export async function startInterview(
     }
   }
 
-
   return response
 }
 
@@ -252,13 +232,11 @@ export async function startInterview(
 export async function getInterview(
   sessionId: string,
 ): Promise<any> {
-
   if (!sessionId) {
     throw new Error(
       'Interview session ID is missing.',
     )
   }
-
 
   return request<any>(
     `/api/interview/${encodeURIComponent(
@@ -280,13 +258,11 @@ export async function addTranscript(
     agent?: string
   },
 ): Promise<any> {
-
   if (!payload.session_id) {
     throw new Error(
       'Interview session ID is missing.',
     )
   }
-
 
   if (
     !payload.text ||
@@ -296,7 +272,6 @@ export async function addTranscript(
       status: 'ignored',
     }
   }
-
 
   return request<any>(
     '/api/interview/transcript',
@@ -332,13 +307,11 @@ export async function addTranscript(
 export async function advanceInterview(
   sessionId: string,
 ): Promise<any> {
-
   if (!sessionId) {
     throw new Error(
       'Interview session ID is missing.',
     )
   }
-
 
   return request<any>(
     `/api/interview/advance?session_id=${encodeURIComponent(
@@ -358,13 +331,11 @@ export async function advanceInterview(
 export async function autoScoreAgent(
   sessionId: string,
 ): Promise<any> {
-
   if (!sessionId) {
     throw new Error(
       'Interview session ID is missing.',
     )
   }
-
 
   return request<any>(
     `/api/interview/${encodeURIComponent(
@@ -384,17 +355,13 @@ export async function autoScoreAgent(
 export async function evaluateInterview(
   sessionId: string,
 ): Promise<any> {
-
   if (!sessionId) {
     throw new Error(
       'Interview session ID is missing.',
     )
   }
 
-
   /*
-   * IMPORTANT:
-   *
    * Backend uses:
    *
    * @app.post("/api/interview/{session_id}/evaluate")
@@ -420,13 +387,11 @@ export async function evaluateInterview(
 export async function endInterview(
   sessionId: string,
 ): Promise<any> {
-
   if (!sessionId) {
     throw new Error(
       'Interview session ID is missing.',
     )
   }
-
 
   return request<any>(
     `/api/interview/end?session_id=${encodeURIComponent(
@@ -446,13 +411,11 @@ export async function endInterview(
 export async function getInterviewResult(
   sessionId: string,
 ): Promise<any> {
-
   if (!sessionId) {
     throw new Error(
       'Interview session ID is missing.',
     )
   }
-
 
   return evaluateInterview(
     sessionId,
@@ -469,7 +432,6 @@ export async function submitAnswer(
   answer: string,
   agent?: string,
 ): Promise<any> {
-
   return addTranscript({
     session_id:
       sessionId,
@@ -493,10 +455,8 @@ export async function getAgoraToken(
   channelName?: string,
   uid?: number,
 ): Promise<any> {
-
   const params =
     new URLSearchParams()
-
 
   if (channelName) {
     params.set(
@@ -505,7 +465,6 @@ export async function getAgoraToken(
     )
   }
 
-
   if (uid !== undefined) {
     params.set(
       'uid',
@@ -513,10 +472,8 @@ export async function getAgoraToken(
     )
   }
 
-
   const query =
     params.toString()
-
 
   return request<any>(
     `/api/agora/token${
