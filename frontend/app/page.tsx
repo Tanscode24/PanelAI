@@ -2439,11 +2439,11 @@ function Result() {
             <div>
 
               <h2>
-                Panel scores
+                Individual Panel Completion
               </h2>
 
               <p>
-                Scores calculated by the backend evaluation
+                Completion status from each panel
               </p>
 
             </div>
